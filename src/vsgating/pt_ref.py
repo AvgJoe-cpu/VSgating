@@ -12,8 +12,8 @@ datasets.config.IN_MEMORY_MAX_SIZE = 500 * 1024 * 1024
 
 def train(training_args: TrainingArguments):
     # Load the dataset
-    train_ds = load_dataset("avgJo3/fineweb-subset-10M", split="train")
-    eval_ds  = load_dataset("avgJo3/fineweb-subset-10M", split="eval")
+    train_ds = load_dataset("avgJo3/fineweb-subset-100M", split="train")
+    eval_ds  = load_dataset("avgJo3/fineweb-subset-100M", split="eval")
 
     use_cuda = torch.cuda.is_available()
 
