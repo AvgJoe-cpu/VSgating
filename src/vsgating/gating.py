@@ -8,23 +8,22 @@ class ScalarGate(nn.Module):
     """
     Implements the bounded, symmetric, exponential gating mechanism:
 
-        • g : ℝᵈ → ℝ   (learnable scalar – here a linear layer)
+        • g : ℝᵈ → ℝᵈ  (learnable per-dim projection)
+        • c              (learnable scalar bound, initialised at c_init)
         • s(x) = c · tanh(g(x))
         • α(x) = exp( s(x) )
         • β(x) = exp(−s(x))   (⇒ α · β = 1)
-
-    The module **only** returns the scalars (α, β); the actual blending of the input x and the function output f(x) is done in a separate function `blend_multiplicative()`.
     """
-    def __init__(self, in_dim: int, c: float = 2.0):
+    def __init__(self, in_dim: int, c_init: float = 2.0):
         """
         Args
         ----
-        in_dim : size of the feature vector x (g’s input dimension)
-        c      : constant range bound (s ∈ [−c, c]  ⇒  α,β ∈ [e^(−c), e^c])
+        in_dim : size of the feature vector x
+        c_init : initial value of the learnable bound c
         """
         super().__init__()
-        self.g = nn.Linear(in_dim, in_dim, bias=False)  # matches current scalar gate
-        self.c = c
+        self.g = nn.Linear(in_dim, in_dim, bias=False)
+        self.c = nn.Parameter(torch.tensor(c_init))
 
     def forward(self, x: torch.Tensor):
         """

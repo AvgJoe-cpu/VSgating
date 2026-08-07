@@ -38,7 +38,7 @@ class RefConfig(PretrainedConfig):
 
     def __init__(
         self,
-        d_model: int = 64,
+        d_model: int = 512,
         num_heads: int = 4,
         num_layers: int = 4,
         vocab_size: int = 50257,
@@ -108,7 +108,7 @@ class RefLM(PreTrainedModel):
     
 # # ---- 1. Build config + model ----
 # config = RefConfig(
-#     d_model=64,
+#     d_model=512,
 #     num_heads=4,
 #     num_layers=4,
 #     vocab_size=50257,
@@ -131,14 +131,14 @@ class RefLM(PreTrainedModel):
 
 # # ---- 4. Forward pass WITH labels (training-style) ----
 # out_with_labels = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
-# print("loss:", out_with_labels.loss.item())
-# assert out_with_labels.loss.requires_grad, "loss should require grad for backward()"
+print("loss:", out_with_labels.loss.item())
+assert out_with_labels.loss.requires_grad, "loss should require grad for backward()"
 
-# # ---- 5. Backward pass sanity check ----
-# out_with_labels.loss.backward()
-# grad_found = any(p.grad is not None for p in model.parameters())
-# print("gradients populated:", grad_found)
+# ---- 5. Backward pass sanity check ----
+out_with_labels.loss.backward()
+grad_found = any(p.grad is not None for p in model.parameters())
+print("gradients populated:", grad_found)
 
-# # ---- 6. Dtype/device sanity check ----
-# print("embedding weight dtype:", model.embedding.weight.dtype)   # expect torch.float32
-# print("embedding weight device:", model.embedding.weight.device) # expect cpu    
+# ---- 6. Dtype/device sanity check ----
+print("embedding weight dtype:", model.embedding.weight.dtype)   # expect torch.float32
+print("embedding weight device:", model.embedding.weight.device) # expect cpu    

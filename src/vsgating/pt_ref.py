@@ -18,7 +18,7 @@ def train(training_args: TrainingArguments):
     use_cuda = torch.cuda.is_available()
 
     config = RefConfig(
-        d_model=64,
+        d_model=512,
         num_heads=4,
         num_layers=4,
         vocab_size=50257,  # GPT-2 tokenizer vocab; swap for your tokenizer's size
