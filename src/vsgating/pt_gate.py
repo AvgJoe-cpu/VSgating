@@ -25,6 +25,7 @@ def train(training_args: TrainingArguments):
         device="cuda" if use_cuda else "cpu",
     )
     model = GateLM(config)
+    print(model)
 
     tokenizer = AutoTokenizer.from_pretrained("gpt2")
     tokenizer.pad_token = tokenizer.eos_token
