@@ -62,7 +62,7 @@ def main():
         "--do_eval", "True",
         "--per_device_train_batch_size", "64",
         "--per_device_eval_batch_size", "64",
-        "--gradient_accumulation_steps", "1",
+        "--gradient_accumulation_steps", "8",
         "--num_train_epochs", "1",
         "--learning_rate", "3e-4",
         "--weight_decay", "0.01",
