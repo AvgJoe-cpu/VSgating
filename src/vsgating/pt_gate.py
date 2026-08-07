@@ -4,6 +4,7 @@ from transformers import Trainer, TrainingArguments, HfArgumentParser, DataColla
 import sys
 
 import datasets
+import wandb
 from vsgating.modeling_gating import GateLM, GateConfig
 
 datasets.config.IN_MEMORY_MAX_SIZE = 500 * 1024 * 1024  
@@ -42,8 +43,12 @@ def train(training_args: TrainingArguments):
         eval_dataset=eval_ds,
         data_collator=data_collator,
     )
-    trainer.train()
-    # trainer.save_model(training_args.output_dir)
+    try:
+        trainer.train()
+        # trainer.save_model(training_args.output_dir)
+    finally:
+        wandb.finish()    
+
 
 
 

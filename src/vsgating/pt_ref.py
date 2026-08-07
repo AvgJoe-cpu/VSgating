@@ -3,6 +3,8 @@ from datasets import load_dataset
 from transformers import Trainer, TrainingArguments, HfArgumentParser, DataCollatorForLanguageModeling, AutoTokenizer
 import sys
 
+import wandb
+
 from vsgating.modeling_ref_v2 import RefLM, RefConfig
 
 import datasets
@@ -42,9 +44,11 @@ def train(training_args: TrainingArguments):
         eval_dataset=eval_ds,
         data_collator=data_collator,
     )
-    trainer.train()
-    # trainer.save_model(training_args.output_dir)
-
+    try:
+        trainer.train()
+        # trainer.save_model(training_args.output_dir)
+    finally:
+        wandb.finish()
 
 
 def main():

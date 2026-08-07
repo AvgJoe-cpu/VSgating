@@ -159,38 +159,38 @@ class GateLM(PreTrainedModel):
 
         return CausalLMOutput(loss=loss, logits=logits)
 
-config = GateConfig(
-    d_model=64,
-    num_heads=4,
-    num_layers=4,
-    vocab_size=50257,
-    scale=4,
-    device="cpu",        # force cpu for a quick, portable smoke test
-    param_dtype="float32",      # bf16 on cpu can be slow/unsupported for some ops, use fp32 here
-)
-model = GateLM(config)
-print(model)
-# ---- 2. Fake batch, matching your dataset shape ----
-batch_size, seq_len = 2, 16
-input_ids = torch.randint(0, config.vocab_size, (batch_size, seq_len))
-attention_mask = torch.ones_like(input_ids)
-labels = input_ids.clone()
+# config = GateConfig(
+#     d_model=64,
+#     num_heads=4,
+#     num_layers=4,
+#     vocab_size=50257,
+#     scale=4,
+#     device="cpu",        # force cpu for a quick, portable smoke test
+#     param_dtype="float32",      # bf16 on cpu can be slow/unsupported for some ops, use fp32 here
+# )
+# model = GateLM(config)
+# print(model)
+# # ---- 2. Fake batch, matching your dataset shape ----
+# batch_size, seq_len = 2, 16
+# input_ids = torch.randint(0, config.vocab_size, (batch_size, seq_len))
+# attention_mask = torch.ones_like(input_ids)
+# labels = input_ids.clone()
 
-# ---- 3. Forward pass WITHOUT labels (inference-style) ----
-out_no_labels = model(input_ids=input_ids, attention_mask=attention_mask)
-print("logits shape:", out_no_labels.logits.shape)   # expect (2, 16, 50257)
-print("loss (should be None):", out_no_labels.loss)
+# # ---- 3. Forward pass WITHOUT labels (inference-style) ----
+# out_no_labels = model(input_ids=input_ids, attention_mask=attention_mask)
+# print("logits shape:", out_no_labels.logits.shape)   # expect (2, 16, 50257)
+# print("loss (should be None):", out_no_labels.loss)
 
-# ---- 4. Forward pass WITH labels (training-style) ----
-out_with_labels = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
-print("loss:", out_with_labels.loss.item())
-assert out_with_labels.loss.requires_grad, "loss should require grad for backward()"
+# # ---- 4. Forward pass WITH labels (training-style) ----
+# out_with_labels = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
+# print("loss:", out_with_labels.loss.item())
+# assert out_with_labels.loss.requires_grad, "loss should require grad for backward()"
 
-# ---- 5. Backward pass sanity check ----
-out_with_labels.loss.backward()
-grad_found = any(p.grad is not None for p in model.parameters())
-print("gradients populated:", grad_found)
+# # ---- 5. Backward pass sanity check ----
+# out_with_labels.loss.backward()
+# grad_found = any(p.grad is not None for p in model.parameters())
+# print("gradients populated:", grad_found)
 
-# ---- 6. Dtype/device sanity check ----
-print("embedding weight dtype:", model.embedding.weight.dtype)   # expect torch.float32
-print("embedding weight device:", model.embedding.weight.device) # expect cpu        
+# # ---- 6. Dtype/device sanity check ----
+# print("embedding weight dtype:", model.embedding.weight.dtype)   # expect torch.float32
+# print("embedding weight device:", model.embedding.weight.device) # expect cpu        
