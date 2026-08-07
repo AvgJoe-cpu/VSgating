@@ -61,20 +61,17 @@ class GateBlock(nn.Module):
         super().__init__()
         self.mha = MHA(d_model, num_heads)
         self.mlp = MLP(d_model, scale=scale)
-        self.norm1 = nn.LayerNorm(d_model)
-        self.norm2 = nn.LayerNorm(d_model)
-        self.g1 = ScalarGate(d_model, c=4.0)
-        self.g2 = ScalarGate(d_model, c=4.0)
+        self.g1 = ScalarGate(d_model, c=0.1)
+        self.g2 = ScalarGate(d_model, c=0.1)
 
     def forward(self, x: torch.Tensor):
-        x_norm1 = self.norm1(x)
-        alpha1, beta1, _ = self.g1(x_norm1)
-        x = blend_multiplicative(x, self.mha(x_norm1), alpha1, beta1)
-
-        x_norm2 = self.norm2(x)
-        alpha2, beta2, _ = self.g2(x_norm2)
-        x = blend_multiplicative(x, self.mlp(x_norm2), alpha2, beta2)
+        # x: (batch_size, seq_len, d_model)
+        alpha1, beta1, _ = self.g1(x)
+        x = blend_multiplicative(x, self.mha(x), alpha1, beta1)   # residual around self-attention
+        alpha2, beta2, _ = self.g2(x)
+        x = blend_multiplicative(x, self.mlp(x), alpha2, beta2)   # residual around MLP
         return x
+
 
 class GateDecoder(nn.Module):
     def __init__(self, d_model: int, num_heads: int, num_layers: int, scale: int = 4):

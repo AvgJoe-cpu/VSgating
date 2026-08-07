@@ -5,6 +5,7 @@ import sys
 
 import datasets
 import wandb
+
 from vsgating.modeling_gating import GateLM, GateConfig
 
 datasets.config.IN_MEMORY_MAX_SIZE = 500 * 1024 * 1024  
@@ -64,10 +65,6 @@ def main():
         "--per_device_eval_batch_size", "64",
         "--gradient_accumulation_steps", "8",
         "--num_train_epochs", "1",
-        "--learning_rate", "3e-4",
-        "--weight_decay", "0.01",
-        "--warmup_ratio", "0.03",
-        "--lr_scheduler_type", "cosine",
         "--logging_strategy", "steps",
         "--logging_steps", "5",
         "--eval_strategy", "steps",
@@ -78,6 +75,13 @@ def main():
         "--bf16", str(torch.cuda.is_available()),
         "--dataloader_num_workers", "8",
         "--report_to", "wandb",
+
+        "--learning_rate",       "3e-4",      # peak lr → min will be 3e-5
+        "--lr_scheduler_type",   "cosine_with_min_lr",
+        "--lr_scheduler_kwargs", '{"min_lr_rate": 0.1}',
+        "--warmup_ratio",        "0.01",      # 1% of total steps
+        "--weight_decay",        "0.1",
+        "--adam_beta2",          "0.95",        
     ]
 
     (training_args,) = parser.parse_args_into_dataclasses(
