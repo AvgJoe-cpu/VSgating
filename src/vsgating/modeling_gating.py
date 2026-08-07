@@ -61,8 +61,8 @@ class GateBlock(nn.Module):
         super().__init__()
         self.mha = MHA(d_model, num_heads)
         self.mlp = MLP(d_model, scale=scale)
-        self.g1 = ScalarGate(d_model, c_init=0.5)
-        self.g2 = ScalarGate(d_model, c_init=0.5)
+        self.g1 = ScalarGate(d_model, c_init=1.0)
+        self.g2 = ScalarGate(d_model, c_init=1.0)
 
     def forward(self, x: torch.Tensor):
         # x: (batch_size, seq_len, d_model)
