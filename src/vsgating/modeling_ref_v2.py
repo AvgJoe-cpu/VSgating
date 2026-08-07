@@ -11,10 +11,12 @@ class RefBlock(nn.Module):
         super().__init__()
         self.mha = MHA(d_model, num_heads)
         self.mlp = MLP(d_model, scale=scale)
+        self.norm1 = nn.LayerNorm(d_model)
+        self.norm2 = nn.LayerNorm(d_model)
 
     def forward(self, x: torch.Tensor):
-        x = x + self.mha(x)  # residual around self-attention
-        x = x + self.mlp(x)  # residual around MLP
+        x = x + self.mha(self.norm1(x))   # pre-norm residual around self-attention
+        x = x + self.mlp(self.norm2(x))   # pre-norm residual around MLP
         return x
 
 
