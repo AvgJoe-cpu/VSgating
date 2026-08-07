@@ -1,17 +1,46 @@
 [project]
 name = "vsgating"
 version = "0.1.0"
-description = "Add your description here"
 readme = "README.md"
 authors = [
     { name = "AvgJoe-cpu", email = "129824187+AvgJoe-cpu@users.noreply.github.com" }
 ]
 requires-python = ">=3.13"
-dependencies = []
 
-[project.scripts]
-vsgating = "vsgating:main"
+dependencies = [
+    "accelerate>=1.14.0",
+    "datasets>=5.0.1",
+    "numpy>=2.5.1",
+    "torch>=2.13.0 ; sys_platform == 'darwin'",
+    "torch>=2.5.0,<2.6 ; sys_platform == 'linux'",
+    "transformers>=5.14.1",
+]
 
 [build-system]
 requires = ["uv_build>=0.12.0,<0.13.0"]
 build-backend = "uv_build"
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cpu", marker = "sys_platform == 'darwin'" },
+  { index = "pytorch-cu121", marker = "sys_platform == 'linux'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu121"
+url = "https://download.pytorch.org/whl/cu121"
+explicit = true
+
+[project.scripts]
+vsgating = "vsgating:main"
+gate = "vsgating.gating:main"
+model = "vsgating.modeling_gating:main"
+data = "vsgating.sample_data:main"
+
+train_ref = "vsgating.pt_ref:main"
+train_gate = "vsgating.pt_gate:main"
