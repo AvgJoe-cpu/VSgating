@@ -23,7 +23,7 @@ class ScalarGate(nn.Module):
         c      : constant range bound (s ∈ [−c, c]  ⇒  α,β ∈ [e^(−c), e^c])
         """
         super().__init__()
-        self.g = nn.Linear(in_dim, 1, bias=False)
+        self.g = nn.Linear(in_dim, in_dim, bias=False)  # matches current scalar gate
         self.c = c
 
     def forward(self, x: torch.Tensor):
