@@ -19,8 +19,8 @@ def train(training_args: TrainingArguments):
 
     config = GateConfig(
         d_model=512,
-        num_heads=4,
-        num_layers=4,
+        num_heads=8,
+        num_layers=8,
         vocab_size=50257,  # GPT-2 tokenizer vocab; swap for your tokenizer's size
         scale=4,           # MLP hidden-size multiplier (d_model * scale)
         device="cuda" if use_cuda else "cpu",

@@ -131,14 +131,14 @@ class RefLM(PreTrainedModel):
 
 # # ---- 4. Forward pass WITH labels (training-style) ----
 # out_with_labels = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
-print("loss:", out_with_labels.loss.item())
-assert out_with_labels.loss.requires_grad, "loss should require grad for backward()"
+# print("loss:", out_with_labels.loss.item())
+# assert out_with_labels.loss.requires_grad, "loss should require grad for backward()"
 
-# ---- 5. Backward pass sanity check ----
-out_with_labels.loss.backward()
-grad_found = any(p.grad is not None for p in model.parameters())
-print("gradients populated:", grad_found)
+# # ---- 5. Backward pass sanity check ----
+# out_with_labels.loss.backward()
+# grad_found = any(p.grad is not None for p in model.parameters())
+# print("gradients populated:", grad_found)
 
-# ---- 6. Dtype/device sanity check ----
-print("embedding weight dtype:", model.embedding.weight.dtype)   # expect torch.float32
-print("embedding weight device:", model.embedding.weight.device) # expect cpu    
+# # ---- 6. Dtype/device sanity check ----
+# print("embedding weight dtype:", model.embedding.weight.dtype)   # expect torch.float32
+# print("embedding weight device:", model.embedding.weight.device) # expect cpu    
