@@ -61,7 +61,7 @@ def main():
         "--do_eval", "True",
         "--per_device_train_batch_size", "64",
         "--per_device_eval_batch_size", "64",
-        "--gradient_accumulation_steps", "16",
+        "--gradient_accumulation_steps", "8",
         "--num_train_epochs", "1",
         "--logging_strategy", "steps",
         "--logging_steps", "5",
@@ -71,10 +71,17 @@ def main():
         "--save_strategy", "no",
         "--seed", "42",
         "--bf16", str(torch.cuda.is_available()),
-        "--dataloader_num_workers", "8",
-        "--report_to", "wandb",
-        "--max_grad_norm", "1.0",   # clips the damage, model recovers next step
 
+        "--dataloader_num_workers", "8",
+        "--persistent_workers", "True",
+        "--prefetch_factor", "2",
+        "--gradient_checkpointing", "True",
+        "--torch_compile", "True",
+
+        "--report_to", "wandb",
+        "--max_grad_norm", "1.0",  
+
+        "--optim", "adamw_torch_fused",
         "--learning_rate",       "3e-4",      # peak lr → min will be 3e-5
         "--lr_scheduler_type",   "cosine_with_min_lr",
         "--lr_scheduler_kwargs", '{"min_lr_rate": 0.1}',
