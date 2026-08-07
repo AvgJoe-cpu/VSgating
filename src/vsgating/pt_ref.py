@@ -73,7 +73,8 @@ def main():
         "--bf16", str(torch.cuda.is_available()),
         "--dataloader_num_workers", "8",
         "--report_to", "wandb",
-
+        "--max_grad_norm", "1.0",   # clips the damage, model recovers next step
+        
         "--learning_rate",       "3e-4",      # peak lr → min will be 3e-5
         "--lr_scheduler_type",   "cosine_with_min_lr",
         "--lr_scheduler_kwargs", '{"min_lr_rate": 0.1}',
