@@ -63,8 +63,8 @@ class GateBlock(nn.Module):
         self.mlp = MLP(d_model, scale=scale)
         self.norm1 = nn.LayerNorm(d_model)
         self.norm2 = nn.LayerNorm(d_model)
-        self.g1 = ScalarGate(d_model, c=2.0)
-        self.g2 = ScalarGate(d_model, c=2.0)
+        self.g1 = ScalarGate(d_model, c=4.0)
+        self.g2 = ScalarGate(d_model, c=4.0)
 
     def forward(self, x: torch.Tensor):
         x_norm1 = self.norm1(x)
