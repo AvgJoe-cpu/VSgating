@@ -56,7 +56,7 @@ def main():
     parser = HfArgumentParser(TrainingArguments)
 
     default_args = [
-        "--output_dir", ".model/pt-ref",
+        "--output_dir", "/content/model/pt-ref",
         "--do_train", "True",
         "--do_eval", "True",
         "--per_device_train_batch_size", "64",
