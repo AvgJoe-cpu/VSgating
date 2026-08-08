@@ -19,8 +19,8 @@ torch.set_float32_matmul_precision("high")  # speedrun trick — free tensor-cor
 
 def train(training_args: TrainingArguments):
     # Load the dataset
-    train_ds = load_dataset("avgJo3/shuffle-dyke-100M-2KT", split="train")
-    eval_ds  = load_dataset("avgJo3/shuffle-dyke-100M-2KT", split="eval")
+    train_ds = load_dataset("avgJo3/fineweb-subset-100M", split="train")
+    eval_ds  = load_dataset("avgJo3/fineweb-subset-100M", split="eval")
 
     use_cuda = torch.cuda.is_available()
 

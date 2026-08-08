@@ -12,17 +12,17 @@ datasets.config.IN_MEMORY_MAX_SIZE = 500 * 1024 * 1024
 
 def train(training_args: TrainingArguments):
     # Load the dataset
-    train_ds = load_dataset("avgJo3/shuffle-dyke-tokenized", split="train")
-    eval_ds  = load_dataset("avgJo3/shuffle-dyke-tokenized", split="eval")
+    train_ds = load_dataset("avgJo3/fineweb-subset-100M", split="train")
+    eval_ds  = load_dataset("avgJo3/fineweb-subset-100M", split="eval")
 
     use_cuda = torch.cuda.is_available()
 
     config = RefConfig(
         d_model=512,
         num_heads=8,
-        num_layers=8,
-        vocab_size=50257,  # GPT-2 tokenizer vocab; swap for your tokenizer's size
-        scale=4,           # MLP hidden-size multiplier (d_model * scale)
+        num_layers=12,
+        vocab_size=50257,
+        scale=4,
         device="cuda" if use_cuda else "cpu",
     )
     model = RefLM(config)
@@ -47,7 +47,7 @@ def train(training_args: TrainingArguments):
     )
     try:
         trainer.train()
-        trainer.save_model(training_args.output_dir)
+        # trainer.save_model(training_args.output_dir)
     finally:
         wandb.finish()
 
