@@ -37,10 +37,13 @@ class ScalarGate2(nn.Module):
     def forward(self, x: torch.Tensor, f_x: torch.Tensor) -> torch.Tensor:
         return torch.tanh(self.g(f_x - x))  # s ∈ (-1, 1), gate sees the sublayer's proposed update
 
+# def blend_multiplicative(x, f_x, s):
+#     gate = torch.sigmoid(2 * s)
+#     return gate * f_x + (1 - gate) * x
+
 def blend_multiplicative(x, f_x, s):
     gate = torch.sigmoid(2 * s)
-    return gate * f_x + (1 - gate) * x
-
+    return x + gate * f_x   # ← gate controls how much of f(x) to ADD
 
 def main() -> None:
     in_dim = 4

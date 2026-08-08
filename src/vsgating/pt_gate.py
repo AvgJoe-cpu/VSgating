@@ -25,18 +25,18 @@ def train(training_args: TrainingArguments):
     use_cuda = torch.cuda.is_available()
 
     config = GateConfig(
-        d_model=1024,
-        num_heads=16,
-        num_layers=24,
-        vocab_size=50257,  # GPT-2 tokenizer vocab; swap for your tokenizer's size
-        scale=4,           # MLP hidden-size multiplier (d_model * scale)
+        d_model=512,
+        num_heads=8,
+        num_layers=12,
+        vocab_size=50257,
+        scale=4,
         device="cuda" if use_cuda else "cpu",
     )
     model = GateLM(config)
     for m in model.modules():
         if isinstance(m, (torch.nn.Linear, torch.nn.Embedding)):
             m.weight.data = m.weight.data.bfloat16()    
-            
+
     print(model)
 
     tokenizer = AutoTokenizer.from_pretrained("gpt2")
