@@ -5,7 +5,7 @@ from typing import Optional
 from transformers import PreTrainedModel, PretrainedConfig
 from transformers.modeling_outputs import CausalLMOutput
 
-from vsgating.gating import ScalarGate, blend_multiplicative
+from vsgating.gating import ScalarGate, ScalarGate2, blend_multiplicative
 import math
 
 
@@ -91,15 +91,14 @@ class GateBlock(nn.Module):
         super().__init__()
         self.mha = MHA(d_model, num_heads)
         self.mlp = MLP(d_model, scale=scale)
-        self.g1 = ScalarGate(d_model, c_init=1.0)
-        self.g2 = ScalarGate(d_model, c_init=1.0)
+        self.g1 = ScalarGate2(d_model)
+        self.g2 = ScalarGate(d_model)
 
-    def forward(self, x: torch.Tensor):
-        # x: (batch_size, seq_len, d_model)
-        alpha1, beta1, _ = self.g1(x)
-        x = blend_multiplicative(x, self.mha(x), alpha1, beta1)   # residual around self-attention
-        alpha2, beta2, _ = self.g2(x)
-        x = blend_multiplicative(x, self.mlp(x), alpha2, beta2)   # residual around MLP
+    def forward(self, x):
+        f_attn = self.mha(x)
+        x = blend_multiplicative(x, f_attn, self.g1(x, f_attn))
+        f_mlp = self.mlp(x)
+        x = blend_multiplicative(x, f_mlp,  self.g2(x, f_mlp))
         return x
 
 
@@ -161,11 +160,13 @@ class GateLM(PreTrainedModel):
         #   - from_pretrained(..., torch_dtype=...) -> storage dtype at load time
         # self.to(device=config.device)
 
-    def _init_weights(self, module: nn.Module):
+    def _init_weights(self, module):
         if isinstance(module, nn.Linear):
-            nn.init.kaiming_normal_(module.weight, nonlinearity="relu")
+            nn.init.normal_(module.weight, mean=0.0, std=0.02)
             if module.bias is not None:
                 nn.init.zeros_(module.bias)
+        elif isinstance(module, nn.Embedding):
+            nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
     def forward(
         self,

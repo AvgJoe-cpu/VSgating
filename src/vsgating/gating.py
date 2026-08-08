@@ -14,7 +14,7 @@ class ScalarGate(nn.Module):
         • α(x) = exp( s(x) )
         • β(x) = exp(−s(x))   (⇒ α · β = 1)
     """
-    def __init__(self, in_dim: int, c_init: float = 2.0):
+    def __init__(self, in_dim: int):
         """
         Args
         ----
@@ -23,30 +23,27 @@ class ScalarGate(nn.Module):
         """
         super().__init__()
         self.g = nn.Linear(in_dim, in_dim, bias=False)
-        self.c = nn.Parameter(torch.tensor(c_init))
 
     def forward(self, x: torch.Tensor):
-        """
-        Returns
-        -------
-        α : torch.Tensor, shape (batch, 1, …)   -- α(x) = exp(s(x))
-        β : torch.Tensor, shape (batch, 1, …)   -- β(x) = exp(−s(x))
-        s : torch.Tensor, shape (batch, 1, …)   -- s(x) itself for inspection
-        """
-        # s(x) = c · tanh(g(x))     ← Equation (1)
-        s = self.c * torch.tanh(self.g(x))
-
-        # α(x) = exp(s(x)),  β(x) = exp(−s(x))   ← Equation (2)
-        alpha = torch.exp(s)
-        beta  = torch.exp(-s)        # reciprocal by construction
-
-        return alpha, beta, s
+        s = torch.tanh(self.g(x))
+        return s  # just return s, let the blend use it directly
 
 
-def blend_multiplicative(x, f_x, alpha, beta):
-    gate = alpha / (alpha + beta)             # ∈ (0, 1)
+class ScalarGate2(nn.Module):
+    def __init__(self, in_dim: int):
+        super().__init__()
+        self.g_x  = nn.Linear(in_dim, in_dim, bias=False)
+        self.g_fx = nn.Linear(in_dim, in_dim, bias=False)
+        nn.init.normal_(self.g_x.weight,  mean=0.0, std=0.01)
+        nn.init.normal_(self.g_fx.weight, mean=0.0, std=0.01)
+
+    def forward(self, x: torch.Tensor, f_x: torch.Tensor) -> torch.Tensor:
+        return torch.tanh(self.g_x(x) + self.g_fx(f_x))
+
+
+def blend_multiplicative(x, f_x, s):
+    gate = torch.sigmoid(2 * s)
     return gate * f_x + (1 - gate) * x
-
 
 
 def main() -> None:

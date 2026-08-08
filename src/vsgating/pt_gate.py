@@ -1,3 +1,8 @@
+import os
+
+from torch import nn
+os.environ["PYTORCH_ALLOC_CONF"] = "expandable_segments:True"  # speedrun trick #1
+
 import torch
 from datasets import load_dataset
 from transformers import Trainer, TrainingArguments, HfArgumentParser, DataCollatorForLanguageModeling, AutoTokenizer
@@ -9,6 +14,8 @@ import wandb
 from vsgating.modeling_gating import GateLM, GateConfig
 
 datasets.config.IN_MEMORY_MAX_SIZE = 500 * 1024 * 1024  
+torch.set_float32_matmul_precision("high")  # speedrun trick — free tensor-core throughput
+
 
 def train(training_args: TrainingArguments):
     # Load the dataset
@@ -19,13 +26,17 @@ def train(training_args: TrainingArguments):
 
     config = GateConfig(
         d_model=1024,
-        num_heads=12,
+        num_heads=16,
         num_layers=24,
         vocab_size=50257,  # GPT-2 tokenizer vocab; swap for your tokenizer's size
         scale=4,           # MLP hidden-size multiplier (d_model * scale)
         device="cuda" if use_cuda else "cpu",
     )
     model = GateLM(config)
+    for m in model.modules():
+        if isinstance(m, (torch.nn.Linear, torch.nn.Embedding)):
+            m.weight.data = m.weight.data.bfloat16()    
+            
     print(model)
 
     tokenizer = AutoTokenizer.from_pretrained("gpt2")
