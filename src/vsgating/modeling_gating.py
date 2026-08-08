@@ -153,15 +153,13 @@ class GateLM(PreTrainedModel):
             scale=config.scale,
         )
         self.output_layer = nn.Linear(config.d_model, config.vocab_size)
-
-
         self.post_init()  # triggers self.apply(self._init_weights)
 
         # centralized device placement, applied once after full construction
         # dtype is intentionally left to native HF mechanisms:
         #   - TrainingArguments(bf16=True) -> autocast during training
         #   - from_pretrained(..., torch_dtype=...) -> storage dtype at load time
-        self.to(device=config.device)
+        # self.to(device=config.device)
 
     def _init_weights(self, module: nn.Module):
         if isinstance(module, nn.Linear):

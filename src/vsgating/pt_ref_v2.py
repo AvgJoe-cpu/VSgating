@@ -3,21 +3,21 @@ from datasets import load_dataset
 from transformers import Trainer, TrainingArguments, HfArgumentParser, DataCollatorForLanguageModeling, AutoTokenizer
 import sys
 
-import datasets
 import wandb
 
-from vsgating.modeling_gating import GateLM, GateConfig
+from vsgating.modeling_ref_v2 import RefLM, RefConfig
 
+import datasets
 datasets.config.IN_MEMORY_MAX_SIZE = 500 * 1024 * 1024  
 
 def train(training_args: TrainingArguments):
     # Load the dataset
-    train_ds = load_dataset("avgJo3/shuffle-dyke-100M-2KT", split="train")
-    eval_ds  = load_dataset("avgJo3/shuffle-dyke-100M-2KT", split="eval")
+    train_ds = load_dataset("avgJo3/shuffle-dyke-tokenized", split="train")
+    eval_ds  = load_dataset("avgJo3/shuffle-dyke-tokenized", split="eval")
 
     use_cuda = torch.cuda.is_available()
 
-    config = GateConfig(
+    config = RefConfig(
         d_model=512,
         num_heads=8,
         num_layers=8,
@@ -25,7 +25,7 @@ def train(training_args: TrainingArguments):
         scale=4,           # MLP hidden-size multiplier (d_model * scale)
         device="cuda" if use_cuda else "cpu",
     )
-    model = GateLM(config)
+    model = RefLM(config)
     print(model)
 
     tokenizer = AutoTokenizer.from_pretrained("gpt2")
@@ -47,19 +47,16 @@ def train(training_args: TrainingArguments):
     )
     try:
         trainer.train()
-        # trainer.save_model(training_args.output_dir)
+        trainer.save_model(training_args.output_dir)
     finally:
-        wandb.finish()    
-
-
-
+        wandb.finish()
 
 
 def main():
     parser = HfArgumentParser(TrainingArguments)
 
     default_args = [
-        "--output_dir", "/content/model/pt-gate",
+        "--output_dir", "/content/model/pt-ref",
         "--do_train", "True",
         "--do_eval", "True",
         "--per_device_train_batch_size", "64",
@@ -75,7 +72,6 @@ def main():
         "--seed", "42",
         "--bf16", str(torch.cuda.is_available()),
 
-
         "--dataloader_num_workers", "8",
 
         "--report_to", "wandb",
@@ -89,7 +85,6 @@ def main():
         "--weight_decay",        "0.1",
         "--adam_beta2",          "0.95",        
     ]
-
 
 
     (training_args,) = parser.parse_args_into_dataclasses(
