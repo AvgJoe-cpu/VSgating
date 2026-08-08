@@ -18,9 +18,9 @@ def train(training_args: TrainingArguments):
     use_cuda = torch.cuda.is_available()
 
     config = GateConfig(
-        d_model=512,
-        num_heads=8,
-        num_layers=8,
+        d_model=1024,
+        num_heads=12,
+        num_layers=24,
         vocab_size=50257,  # GPT-2 tokenizer vocab; swap for your tokenizer's size
         scale=4,           # MLP hidden-size multiplier (d_model * scale)
         device="cuda" if use_cuda else "cpu",
@@ -62,14 +62,14 @@ def main():
         "--output_dir", "/content/model/pt-gate",
         "--do_train", "True",
         "--do_eval", "True",
-        "--per_device_train_batch_size", "64",
-        "--per_device_eval_batch_size", "64",
-        "--gradient_accumulation_steps", "8",
+        "--per_device_train_batch_size", "2",
+        "--per_device_eval_batch_size", "2",
+        "--gradient_accumulation_steps", "1",
         "--num_train_epochs", "1",
         "--logging_strategy", "steps",
         "--logging_steps", "5",
         "--eval_strategy", "steps",
-        "--eval_steps", "10",
+        "--eval_steps", "50",
         "--eval_on_start", "True",
         "--save_strategy", "no",
         "--seed", "42",
