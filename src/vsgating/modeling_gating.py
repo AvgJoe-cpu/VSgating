@@ -8,6 +8,31 @@ from transformers.modeling_outputs import CausalLMOutput
 from vsgating.gating import ScalarGate, blend_multiplicative
 import math
 
+try:
+    from flash_attn.ops.fused_dense import FusedMLP as _FusedMLP
+    _FLASH_AVAILABLE = True
+    print("FlashAttention is available.")
+except ImportError:
+    _FLASH_AVAILABLE = False
+
+class MLP(nn.Module):
+    def __init__(self, d_model: int, scale: int = 4):
+        super().__init__()
+        hidden = d_model * scale
+        if _FLASH_AVAILABLE and torch.cuda.is_available():
+            self.net = _FusedMLP(d_model, hidden, d_model, activation="relu")
+            self._fused = True
+        else:
+            self.net = nn.Sequential(
+                nn.Linear(d_model, hidden),
+                nn.ReLU(),
+                nn.Linear(hidden, d_model),
+            )
+            self._fused = False
+
+    def forward(self, x: torch.Tensor):
+        return self.net(x)
+
 
 class SinusoidalPositionalEncoding(nn.Module):
     """
@@ -38,20 +63,20 @@ class SinusoidalPositionalEncoding(nn.Module):
         return self.dropout(x)
 
     
-class MLP(nn.Module):
-    """
-    Implements a simple multi-layer perceptron (MLP) with ReLU activations.
-    """
-    def __init__(self, d_model: int, scale: int = 4):
-        super().__init__()
+# class MLP(nn.Module):
+#     """
+#     Implements a simple multi-layer perceptron (MLP) with ReLU activations.
+#     """
+#     def __init__(self, d_model: int, scale: int = 4):
+#         super().__init__()
 
-        self.fc1 = nn.Linear(d_model, d_model * scale)
-        self.fc2 = nn.Linear(d_model * scale, d_model)
+#         self.fc1 = nn.Linear(d_model, d_model * scale)
+#         self.fc2 = nn.Linear(d_model * scale, d_model)
 
-    def forward(self, x: torch.Tensor):
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-        return x
+#     def forward(self, x: torch.Tensor):
+#         x = F.relu(self.fc1(x))
+#         x = self.fc2(x)
+#         return x
 
 
 class MHA(nn.Module):
