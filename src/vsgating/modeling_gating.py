@@ -55,20 +55,18 @@ class MLP(nn.Module):
 
 
 class MHA(nn.Module):
-    """
-    Implements multi-head attention using F.scaled_dot_product_attention.
-    """
     def __init__(self, d_model: int, num_heads: int):
         super().__init__()
-
-        assert d_model % num_heads == 0, "d_model must be divisible by num_heads"
+        assert d_model % num_heads == 0
         self.d_model = d_model
         self.num_heads = num_heads
         self.head_dim = d_model // num_heads
 
-        self.q_proj = nn.Linear(d_model, d_model)
-        self.k_proj = nn.Linear(d_model, d_model)
-        self.v_proj = nn.Linear(d_model, d_model)
+        self.q_proj   = nn.Linear(d_model, d_model, bias=False)
+        self.k_proj   = nn.Linear(d_model, d_model, bias=False)
+        self.v_proj   = nn.Linear(d_model, d_model, bias=False)
+        self.out_proj = nn.Linear(d_model, d_model, bias=False)
+        # nn.init.zeros_(self.out_proj.weight)  
 
     def forward(self, x: torch.Tensor):
         # x: (batch_size, seq_len, d_model)
@@ -80,10 +78,8 @@ class MHA(nn.Module):
         # q, k, v: (batch_size, num_heads, seq_len, head_dim)
 
         attn_out = F.scaled_dot_product_attention(q, k, v, attn_mask=None, dropout_p=0.0, is_causal=True)
-        # attn_out: (batch_size, num_heads, seq_len, head_dim)
-
         attn_out = attn_out.transpose(1, 2).contiguous().view(B, T, E)
-        return attn_out
+        return self.out_proj(attn_out)
 
 
 class GateBlock(nn.Module):
@@ -92,7 +88,7 @@ class GateBlock(nn.Module):
         self.mha = MHA(d_model, num_heads)
         self.mlp = MLP(d_model, scale=scale)
         self.g1 = ScalarGate2(d_model)
-        self.g2 = ScalarGate(d_model)
+        self.g2 = ScalarGate2(d_model)
 
     def forward(self, x):
         f_attn = self.mha(x)
@@ -168,10 +164,8 @@ class GateLM(PreTrainedModel):
                 nn.init.zeros_(module.bias)
         elif isinstance(module, nn.Embedding):
             nn.init.normal_(module.weight, mean=0.0, std=0.02)
-        elif isinstance(module, ScalarGate2):          
-            # g should produce near-zero outputs at init
-            # → small std ensures tanh(g(x)) ≈ 0 → s ≈ 0 → α,β ≈ 1
-            nn.init.normal_(module.g.weight, mean=0.0, std=0.001)  #
+        elif isinstance(module, ScalarGate2):
+            nn.init.normal_(module.g.weight, mean=0.0, std=0.02)
 
     def forward(
         self,
