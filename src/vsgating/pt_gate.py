@@ -47,7 +47,7 @@ def train(training_args: TrainingArguments):
     )
     try:
         trainer.train()
-        # trainer.save_model(training_args.output_dir)
+        trainer.save_model(training_args.output_dir)
     finally:
         wandb.finish()    
 
@@ -59,7 +59,7 @@ def main():
     parser = HfArgumentParser(TrainingArguments)
 
     default_args = [
-        "--output_dir", "./checkpoints/pretrain-proto",
+        "--output_dir", "./model/pt-gate",
         "--do_train", "True",
         "--do_eval", "True",
         "--per_device_train_batch_size", "64",

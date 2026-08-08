@@ -22,6 +22,8 @@ class MLP(nn.Module):
         if _FLASH_AVAILABLE and torch.cuda.is_available():
             self.net = _FusedMLP(d_model, hidden, d_model, activation="relu")
             self._fused = True
+            print("Using FlashAttention's FusedMLP for MLP layers.")
+            
         else:
             self.net = nn.Sequential(
                 nn.Linear(d_model, hidden),
