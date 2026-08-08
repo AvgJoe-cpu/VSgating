@@ -4,7 +4,7 @@ from transformers import PreTrainedModel, PretrainedConfig
 from transformers.modeling_outputs import CausalLMOutput
 from typing import Optional
 
-from vsgating.modeling_gating import MHA, MLP
+from vsgating.modeling_gating import MHA, MLP, SinusoidalPositionalEncoding
 
 class RefBlock(nn.Module):
     def __init__(self, d_model: int, num_heads: int, scale: int = 4):
@@ -62,7 +62,7 @@ class RefLM(PreTrainedModel):
 
     def __init__(self, config: RefConfig):
         super().__init__(config)
-
+        self.pos = SinusoidalPositionalEncoding(config.d_model)
         self.embedding = nn.Embedding(config.vocab_size, config.d_model)
         self.decoder = RefDecoder(
             config.d_model,
@@ -93,6 +93,7 @@ class RefLM(PreTrainedModel):
         labels: Optional[torch.Tensor] = None,
     ) -> CausalLMOutput:
         x = self.embedding(input_ids)
+        x = self.pos(x)
         x = self.decoder(x)
         logits = self.output_layer(x)
 

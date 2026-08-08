@@ -6,8 +6,44 @@ from transformers import PreTrainedModel, PretrainedConfig
 from transformers.modeling_outputs import CausalLMOutput
 
 from vsgating.gating import ScalarGate, blend_multiplicative
+import math
 
 
+class SinusoidalPositionalEncoding(nn.Module):
+    """
+    Sinusoidal Positional Encoding from Vaswani et al. (2017).
+    "Attention Is All You Need" https://arxiv.org/abs/1706.03762
+    """
+
+    def __init__(self, d_model: int, max_seq_len: int = 1024, dropout: float = 0.1):
+        super().__init__()
+        self.dropout = nn.Dropout(p=dropout)
+
+        # pe: (1, max_seq_len, d_model)
+        pe = torch.zeros(max_seq_len, d_model)
+
+        position = torch.arange(max_seq_len).unsqueeze(1)          # (max_seq_len, 1)
+        div_term = torch.exp(                                        # (d_model/2,)
+            torch.arange(0, d_model, 2) * (-math.log(10000.0) / d_model)
+        )
+
+        pe[:, 0::2] = torch.sin(position * div_term)               # even dims
+        pe[:, 1::2] = torch.cos(position * div_term)               # odd dims
+
+        pe = pe.unsqueeze(0)                                        # (1, max_seq_len, d_model)
+        self.register_buffer("pe", pe)                              # not a parameter
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Args:
+            x: (batch_size, seq_len, d_model)
+        Returns:
+            x + positional encoding, same shape, with dropout applied
+        """
+        x = x + self.pe[:, :x.size(1)]
+        return self.dropout(x)
+
+    
 class MLP(nn.Module):
     """
     Implements a simple multi-layer perceptron (MLP) with ReLU activations.
@@ -114,6 +150,7 @@ class GateLM(PreTrainedModel):
     def __init__(self, config: GateConfig):
         super().__init__(config)
 
+        self.pos = SinusoidalPositionalEncoding(config.d_model)
         self.embedding = nn.Embedding(config.vocab_size, config.d_model)
         self.decoder = GateDecoder(
             config.d_model,
@@ -145,6 +182,7 @@ class GateLM(PreTrainedModel):
         labels: Optional[torch.Tensor] = None,
     ) -> CausalLMOutput:
         x = self.embedding(input_ids)
+        x = self.pos(x)
         x = self.decoder(x)
         logits = self.output_layer(x)
 
