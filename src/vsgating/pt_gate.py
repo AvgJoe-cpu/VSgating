@@ -75,11 +75,8 @@ def main():
         "--seed", "42",
         "--bf16", str(torch.cuda.is_available()),
 
+
         "--dataloader_num_workers", "8",
-        "--persistent_workers", "True",
-        "--prefetch_factor", "2",
-        "--gradient_checkpointing", "True",
-        "--torch_compile", "True",
 
         "--report_to", "wandb",
         "--max_grad_norm", "1.0",  
@@ -92,6 +89,7 @@ def main():
         "--weight_decay",        "0.1",
         "--adam_beta2",          "0.95",        
     ]
+
 
 
     (training_args,) = parser.parse_args_into_dataclasses(

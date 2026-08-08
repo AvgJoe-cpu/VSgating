@@ -12,8 +12,8 @@ datasets.config.IN_MEMORY_MAX_SIZE = 500 * 1024 * 1024
 
 def train(training_args: TrainingArguments):
     # Load the dataset
-    train_ds = load_dataset("avgJo3/fineweb-subset-100M", split="train")
-    eval_ds  = load_dataset("avgJo3/fineweb-subset-100M", split="eval")
+    train_ds = load_dataset("avgJo3/shuffle-dyke-tokenized", split="train")
+    eval_ds  = load_dataset("avgJo3/shuffle-dyke-tokenized", split="eval")
 
     use_cuda = torch.cuda.is_available()
 
@@ -73,10 +73,6 @@ def main():
         "--bf16", str(torch.cuda.is_available()),
 
         "--dataloader_num_workers", "8",
-        "--persistent_workers", "True",
-        "--prefetch_factor", "2",
-        "--gradient_checkpointing", "True",
-        "--torch_compile", "True",
 
         "--report_to", "wandb",
         "--max_grad_norm", "1.0",  
