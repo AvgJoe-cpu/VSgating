@@ -5,20 +5,18 @@ readme = "README.md"
 authors = [
     { name = "AvgJoe-cpu", email = "129824187+AvgJoe-cpu@users.noreply.github.com" }
 ]
-requires-python = ">=3.12,<3.13"   # pin to 3.12 — flash-attn has no py3.13 wheels yet
+requires-python = ">=3.12,<3.13"
 
 dependencies = [
     "accelerate>=1.14.0",
     "datasets>=5.0.1",
     "numpy>=2.5.1",
-    "torch>=2.5.0,<2.6 ; sys_platform == 'linux'",
-    "torch>=2.13.0    ; sys_platform == 'darwin'",
+    "torch>=2.13.0 ; sys_platform == 'darwin'",
+    "torch>=2.13.0 ; sys_platform == 'linux'",
     "transformers>=5.14.1",
     "wandb>=0.28.1",
-    # flash-attn: prebuilt wheel pinned to torch2.5 + cu121 + sm_80 (A100)
-    # wheel source: https://github.com/mjun0812/flash-attention-prebuild-wheels
-    # GPU: A100 (sm_80), CUDA: 12.1, Python: 3.12
-    "flash-attn>=2.7.0 ; sys_platform == 'linux'",
+    # flash-attn: Linux/CUDA only — skipped silently on macOS/MPS
+    "flash-attn>=2.8.3 ; sys_platform == 'linux'",
 ]
 
 [build-system]
@@ -28,11 +26,12 @@ build-backend = "uv_build"
 [tool.uv.sources]
 torch = [
   { index = "pytorch-cpu",   marker = "sys_platform == 'darwin'" },
-  { index = "pytorch-cu121", marker = "sys_platform == 'linux'"  },
+  { index = "pytorch-cu126", marker = "sys_platform == 'linux'"  },
 ]
 flash-attn = [
-  # prebuilt wheel — no source compile, no CUDA toolkit needed locally
-  { url = "https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v2.7.4/flash_attn-2.7.4+cu121torch2.5-cp312-cp312-linux_x86_64.whl", marker = "sys_platform == 'linux'" },
+  # GPU: A100 (sm_80), CUDA: 12.6, PyTorch: 2.13, Python: 3.12
+  # release: https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/tag/v0.9.47
+  { url = "https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.9.47/flash_attn-2.8.3+cu126torch2.13-cp312-cp312-linux_x86_64.whl", marker = "sys_platform == 'linux'" },
 ]
 
 [[tool.uv.index]]
@@ -41,14 +40,14 @@ url  = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [[tool.uv.index]]
-name = "pytorch-cu121"
-url  = "https://download.pytorch.org/whl/cu121"
+name = "pytorch-cu126"
+url  = "https://download.pytorch.org/whl/cu126"
 explicit = true
 
 [project.scripts]
-vsgating  = "vsgating:main"
-gate      = "vsgating.gating:main"
-model     = "vsgating.modeling_gating:main"
-data      = "vsgating.sample_data:main"
+vsgating   = "vsgating:main"
+gate       = "vsgating.gating:main"
+model      = "vsgating.modeling_gating:main"
+data       = "vsgating.sample_data:main"
 train_ref  = "vsgating.pt_ref:main"
 train_gate = "vsgating.pt_gate:main"
