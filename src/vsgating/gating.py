@@ -32,14 +32,10 @@ class ScalarGate(nn.Module):
 class ScalarGate2(nn.Module):
     def __init__(self, in_dim: int):
         super().__init__()
-        self.g_x  = nn.Linear(in_dim, in_dim, bias=False)
-        self.g_fx = nn.Linear(in_dim, in_dim, bias=False)
-        nn.init.normal_(self.g_x.weight,  mean=0.0, std=0.01)
-        nn.init.normal_(self.g_fx.weight, mean=0.0, std=0.01)
+        self.g = nn.Linear(in_dim, in_dim, bias=False)
 
     def forward(self, x: torch.Tensor, f_x: torch.Tensor) -> torch.Tensor:
-        return torch.tanh(self.g_x(x) + self.g_fx(f_x))
-
+        return torch.tanh(self.g(f_x - x))  # s ∈ (-1, 1), gate sees the sublayer's proposed update
 
 def blend_multiplicative(x, f_x, s):
     gate = torch.sigmoid(2 * s)

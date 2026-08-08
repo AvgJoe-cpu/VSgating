@@ -160,6 +160,7 @@ class GateLM(PreTrainedModel):
         #   - from_pretrained(..., torch_dtype=...) -> storage dtype at load time
         # self.to(device=config.device)
 
+
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
             nn.init.normal_(module.weight, mean=0.0, std=0.02)
@@ -167,6 +168,10 @@ class GateLM(PreTrainedModel):
                 nn.init.zeros_(module.bias)
         elif isinstance(module, nn.Embedding):
             nn.init.normal_(module.weight, mean=0.0, std=0.02)
+        elif isinstance(module, ScalarGate2):          
+            # g should produce near-zero outputs at init
+            # → small std ensures tanh(g(x)) ≈ 0 → s ≈ 0 → α,β ≈ 1
+            nn.init.normal_(module.g.weight, mean=0.0, std=0.001)  #
 
     def forward(
         self,
