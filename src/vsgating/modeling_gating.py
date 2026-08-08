@@ -82,21 +82,35 @@ class MHA(nn.Module):
         return self.out_proj(attn_out)
 
 
+# class GateBlock(nn.Module):
+#     def __init__(self, d_model: int, num_heads: int, scale: int = 4):
+#         super().__init__()
+#         self.mha = MHA(d_model, num_heads)
+#         self.mlp = MLP(d_model, scale=scale)
+#         self.g1 = ScalarGate2(d_model)
+#         self.g2 = ScalarGate2(d_model)
+
+#     def forward(self, x):
+#         f_attn = self.mha(x)
+#         x = blend_multiplicative(x, f_attn, self.g1(x, f_attn))
+#         f_mlp = self.mlp(x)
+#         x = blend_multiplicative(x, f_mlp,  self.g2(x, f_mlp))
+#         return x
+
 class GateBlock(nn.Module):
     def __init__(self, d_model: int, num_heads: int, scale: int = 4):
         super().__init__()
         self.mha = MHA(d_model, num_heads)
         self.mlp = MLP(d_model, scale=scale)
-        self.g1 = ScalarGate2(d_model)
-        self.g2 = ScalarGate2(d_model)
+        self.g1 = ScalarGate(d_model)
+        self.g2 = ScalarGate(d_model)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor):
         f_attn = self.mha(x)
-        x = blend_multiplicative(x, f_attn, self.g1(x, f_attn))
+        x = blend_multiplicative(x, f_attn, self.g1(x))
         f_mlp = self.mlp(x)
-        x = blend_multiplicative(x, f_mlp,  self.g2(x, f_mlp))
+        x = blend_multiplicative(x, f_mlp,  self.g2(x))
         return x
-
 
 class GateDecoder(nn.Module):
     def __init__(self, d_model: int, num_heads: int, num_layers: int, scale: int = 4):
