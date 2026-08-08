@@ -80,7 +80,7 @@ def main():
         "--logging_strategy", "steps",
         "--logging_steps", "5",
         "--eval_strategy", "steps",
-        "--eval_steps", "50",
+        "--eval_steps", "10",
         "--eval_on_start", "True",
         "--save_strategy", "no",
         "--seed", "42",
