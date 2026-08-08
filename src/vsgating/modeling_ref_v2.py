@@ -70,21 +70,23 @@ class RefLM(PreTrainedModel):
             config.num_layers,
             scale=config.scale,
         )
-        self.output_layer = nn.Linear(config.d_model, config.vocab_size)
+        self.norm = nn.LayerNorm(config.d_model)                  # post-decoder norm
+        self.output_layer = nn.Linear(config.d_model, config.vocab_size, bias=False)
+        self.output_layer.weight = self.embedding.weight          # tie weights
 
-        self.post_init()  # triggers self.apply(self._init_weights)
-
-        # centralized device placement, applied once after full construction
-        # dtype is intentionally left to native HF mechanisms:
-        #   - TrainingArguments(bf16=True) -> autocast during training
-        #   - from_pretrained(..., torch_dtype=...) -> storage dtype at load time
-        # self.to(device=config.device)
+        self.post_init()
 
     def _init_weights(self, module: nn.Module):
         if isinstance(module, nn.Linear):
-            nn.init.kaiming_normal_(module.weight, nonlinearity="relu")
+            nn.init.normal_(module.weight, mean=0.0, std=0.02)
             if module.bias is not None:
                 nn.init.zeros_(module.bias)
+        elif isinstance(module, nn.Embedding):
+            nn.init.normal_(module.weight, mean=0.0, std=0.02)
+        # zero-init output projections → identity at step 0
+        for block in self.decoder.layers:
+            nn.init.zeros_(block.mha.out_proj.weight)
+            nn.init.zeros_(block.mlp.fc2.weight)
 
     def forward(
         self,
@@ -95,6 +97,7 @@ class RefLM(PreTrainedModel):
         x = self.embedding(input_ids)
         x = self.pos(x)
         x = self.decoder(x)
+        x = self.norm(x)                                          # pre-head norm
         logits = self.output_layer(x)
 
         loss = None
